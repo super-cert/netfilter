@@ -8,7 +8,8 @@
 #include <errno.h>
 #include <string.h>
 #include <libnetfilter_queue/libnetfilter_queue.h>
-
+int sexcheck = 1;
+char urlstring[100];
 struct ip_header{
   unsigned char version;
   unsigned char SerField[1];
@@ -61,7 +62,7 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 	u_int32_t mark,ifi; 
 	int ret;
 	unsigned char *data;
-
+	
 	ph = nfq_get_msg_packet_hdr(tb);
 	if (ph) {
 		id = ntohl(ph->packet_id);
@@ -109,13 +110,26 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 	struct tcp_header *tcp = (struct tcp_header*)data;
 
 	data+= ((tcp->tcp_length)>>4)*4;
-	char str1[200];
-	memcpy(str1, data, 20);
-	printf("url : ");
-	printf("%s", str1);
-	printf("\n");
 	if (ret >= 0)
 		printf("payload_len=%d ", ret);
+	printf("\n");
+	if(ret-iplength*4-((tcp->tcp_length)>>4)*4>=16)
+	{
+		char str1[50];
+		
+		memcpy(str1, data, 50);
+		//printf("url : ");
+		
+		//printf("\n");	
+		if(strstr(str1, urlstring)!=0)
+		{
+		printf("%s access detected!\n", urlstring);
+		printf("url : %s", str1);
+		sexcheck=1;
+		}
+		//printf("sex.com : ");
+		
+		}
 	printf("\n");
 	fputc('\n', stdout);
 	
@@ -126,8 +140,13 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 	      struct nfq_data *nfa, void *data)
 {
+	
 	u_int32_t id = print_pkt(nfa);
 	printf("entering callback\n");
+	if(sexcheck==1)
+	{	sexcheck=0;
+		return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
+	}
 	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
@@ -138,6 +157,10 @@ int main(int argc, char **argv)
 	struct nfnl_handle *nh;
 	int fd;
 	int rv;
+	char * argvdump = argv[2];
+	memcpy(urlstring, argvdump,sizeof(urlstring));
+	printf("%s\n", urlstring);
+	
 	char buf[4096] __attribute__ ((aligned));
 
 	printf("opening library handle\n");
