@@ -8,8 +8,8 @@
 #include <errno.h>
 #include <string.h>
 #include <libnetfilter_queue/libnetfilter_queue.h>
-int sexcheck = 1;
-char urlstring[100];
+int sexcheck = 0; // sex.com check
+char urlstring[100]; // using string for strstr
 struct ip_header{
   unsigned char version;
   unsigned char SerField[1];
@@ -125,7 +125,7 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 		{
 		printf("%s access detected!\n", urlstring);
 		printf("url : %s", str1);
-		sexcheck=1;
+		sexcheck=1; //return NF_DROP
 		}
 		//printf("sex.com : ");
 		
@@ -145,19 +145,32 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 	printf("entering callback\n");
 	if(sexcheck==1)
 	{	sexcheck=0;
-		return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
+		return nfq_set_verdict(qh, id, NF_DROP, 0, NULL); //sex.com sheck
 	}
 	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
-
+void usage() {
+  printf("syntax: pcap_test <interface>\n");
+  printf("sample: pcap_test wlan0\n");
+}
 int main(int argc, char **argv)
-{
+{	
+	if (argc > 3) {
+    usage();
+    return -1;
+  }
+	else if(argv ==2) {
+	char * argvdump = argv[2]; //syntax
+	}
+	else{
+	char * argvdump = "sex.com";
+	}
 	struct nfq_handle *h;
 	struct nfq_q_handle *qh;
 	struct nfnl_handle *nh;
 	int fd;
 	int rv;
-	char * argvdump = argv[2];
+	
 	memcpy(urlstring, argvdump,sizeof(urlstring));
 	printf("%s\n", urlstring);
 	
