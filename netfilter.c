@@ -150,20 +150,22 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 void usage() {
-  printf("syntax: pcap_test <interface>\n");
-  printf("sample: pcap_test wlan0\n");
+  printf("syntax: nfqnl_test <queuenum> <url> | nfqnl_test <queuenum> \n");
+  printf("sample: nfqnl_test 0 | nfqnl_test sex.com\n");
 }
 int main(int argc, char **argv)
 {	
+	char * argvdump;
 	if (argc > 3) {
     usage();
     return -1;
   }
-	else if(argv ==2) {
-	char * argvdump = argv[2]; //syntax
+	else if(argc ==3) {
+	argvdump= argv[2]; //syntax
+	//printf("url : %s", argvdump);
 	}
 	else{
-	char * argvdump = "sex.com";
+	argvdump = "sex.com";
 	}
 	struct nfq_handle *h;
 	struct nfq_q_handle *qh;
